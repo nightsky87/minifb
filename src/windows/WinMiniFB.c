@@ -634,7 +634,7 @@ mfb_update_ex(struct mfb_window *window, void *buffer, unsigned width, unsigned 
 
     window_data->draw_buffer   = buffer;
     window_data->buffer_width  = width;
-    window_data->buffer_stride = width * 4;
+    window_data->buffer_stride = width;
     window_data->buffer_height = height;
 
     SWindowData_Win *window_data_win = (SWindowData_Win *) window_data->specific;
@@ -643,6 +643,52 @@ mfb_update_ex(struct mfb_window *window, void *buffer, unsigned width, unsigned 
 
     window_data_win->bitmapInfo->bmiHeader.biWidth = window_data->buffer_width;
     window_data_win->bitmapInfo->bmiHeader.biHeight = -(LONG) window_data->buffer_height;
+    InvalidateRect(window_data_win->window, 0x0, TRUE);
+    SendMessage(window_data_win->window, WM_PAINT, 0, 0);
+
+#else
+
+    redraw_GL(window_data, buffer);
+
+#endif
+
+    while (window_data->close == false && PeekMessage(&msg, window_data_win->window, 0, 0, PM_REMOVE)) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+
+    return STATE_OK;
+}
+
+mfb_update_state
+mfb_update_crop(struct mfb_window* window, void* buffer, unsigned width, unsigned height, unsigned stride) {
+    MSG msg;
+
+    if (window == 0x0) {
+        return STATE_INVALID_WINDOW;
+    }
+
+    SWindowData* window_data = (SWindowData*)window;
+    if (window_data->close) {
+        destroy_window_data(window_data);
+        return STATE_EXIT;
+    }
+
+    if (buffer == 0x0) {
+        return STATE_INVALID_BUFFER;
+    }
+
+    window_data->draw_buffer = buffer;
+    window_data->buffer_width = width;
+    window_data->buffer_stride = stride;
+    window_data->buffer_height = height;
+
+    SWindowData_Win* window_data_win = (SWindowData_Win*)window_data->specific;
+
+#if !defined(USE_OPENGL_API)
+
+    window_data_win->bitmapInfo->bmiHeader.biWidth = window_data->buffer_stride;
+    window_data_win->bitmapInfo->bmiHeader.biHeight = -(LONG)window_data->buffer_height;
     InvalidateRect(window_data_win->window, 0x0, TRUE);
     SendMessage(window_data_win->window, WM_PAINT, 0, 0);
 

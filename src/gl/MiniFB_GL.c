@@ -301,6 +301,7 @@ redraw_GL(SWindowData *window_data, const void *pixels) {
     glClear(GL_COLOR_BUFFER_BIT);
 
     UseCleanUp(glBindTexture(GL_TEXTURE_2D, window_data_ex->text_id));
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, window_data->buffer_stride);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, window_data->buffer_width, window_data->buffer_height, 0, format, GL_UNSIGNED_BYTE, pixels);
     //glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, window_data->buffer_width, window_data->buffer_height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
